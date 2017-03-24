@@ -1,0 +1,27 @@
+{
+  "name": "modelderivative-nodejs-tutorial",
+  "version": "1.0.0",
+  "description": "tutorial using forge api npm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaimerosales/modelderivative-nodejs-tutorial.git"
+  },
+  "keywords": [
+    "forge"
+  ],
+  "author": "Jaime Rosales",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jaimerosales/modelderivative-nodejs-tutorial/issues"
+  },
+  "homepage": "https://github.com/jaimerosales/modelderivative-nodejs-tutorial#readme",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "forge-apis": "^0.3.0",
+    "fs": "0.0.1-security"
+  }
+}
