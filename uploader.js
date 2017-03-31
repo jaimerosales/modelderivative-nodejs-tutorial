@@ -9,13 +9,13 @@ var CLIENT_ID = process.env.FORGE_CLIENT_ID || '<replace with your consumer key>
 // TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
 // regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
 // length). Note that you cannot change a bucket key.
-var BUCKET_KEY = 'BUCKETNAME' + CLIENT_ID.toLowerCase();
+var BUCKET_KEY = (process.env.FORGE_BUCKET_NAME || '<replace with your BUCKET NAME>') + CLIENT_ID.toLowerCase();
 
 // TODO - Choose a filename - a key for the uploaded object
-var FILE_NAME = '';
+var FILE_NAME = process.env.FORGE_FILE_NAME || '';
 
 // TODO - specify the full filename and path
-var FILE_PATH = '';
+var FILE_PATH = process.env.FORGE_FILE_PATH || '';
 
 var bucketsApi = new ForgeSDK.BucketsApi(), // Buckets Client
 	objectsApi = new ForgeSDK.ObjectsApi(), // Objects Client

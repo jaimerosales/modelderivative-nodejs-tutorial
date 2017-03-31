@@ -1,0 +1,3 @@
+node_modules
+# sensitive information, don't commit.
+forge_auth.sh

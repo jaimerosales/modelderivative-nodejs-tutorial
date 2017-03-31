@@ -1,0 +1,10 @@
+# Copy to forge_auth.sh, replace with your own data and execute
+# in your terminal like "source forge_auth.sh" before running the scripts.
+# Check with "echo $FORGE_BUCKET_NAME" that your variables got exported.
+# Make sure you don't publish your credentials!
+export FORGE_CLIENT_ID='REPLACE_ME'
+export FORGE_CLIENT_SECRET='REPLACE_ME'
+export FORGE_BUCKET_NAME='REPLACE_ME'
+export FORGE_FILE_NAME=''
+export FORGE_FILE_PATH=''
+export PORT=3000
