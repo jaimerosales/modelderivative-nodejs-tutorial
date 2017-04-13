@@ -4,7 +4,12 @@
 # Make sure you don't publish your credentials!
 export FORGE_CLIENT_ID='REPLACE_ME'
 export FORGE_CLIENT_SECRET='REPLACE_ME'
+
+// TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
+// regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
+// length). Note that you cannot change a bucket key.
 export FORGE_BUCKET_NAME='REPLACE_ME'
+
 export FORGE_FILE_NAME=''
 export FORGE_FILE_PATH=''
 export PORT=3000

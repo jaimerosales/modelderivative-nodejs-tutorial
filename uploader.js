@@ -3,22 +3,16 @@ var chalk = require('chalk'); // coloring terminal console logs https://github.c
 var logs = console.log;
 
 var ForgeSDK = require('forge-apis');
-var CLIENT_ID = process.env.FORGE_CLIENT_ID || '<replace with your consumer key>',
-	CLIENT_SECRET = process.env.FORGE_CLIENT_SECRET || '<replace with your consumer secret>';
 
-// TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
-// regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
-// length). Note that you cannot change a bucket key.
-var BUCKET_KEY = (process.env.FORGE_BUCKET_NAME || '<replace with your BUCKET NAME>') + CLIENT_ID.toLowerCase();
+// TODO - Check the file forge-auth.sh to set these ENV variables.
+var CLIENT_ID     = process.env.FORGE_CLIENT_ID,
+	CLIENT_SECRET = process.env.FORGE_CLIENT_SECRET,
+	BUCKET_KEY    = process.env.FORGE_BUCKET_NAME + CLIENT_ID.toLowerCase(),
+	FILE_NAME     = process.env.FORGE_FILE_NAME,
+	FILE_PATH     = process.env.FORGE_FILE_PATH;
 
-// TODO - Choose a filename - a key for the uploaded object
-var FILE_NAME = process.env.FORGE_FILE_NAME || '';
-
-// TODO - specify the full filename and path
-var FILE_PATH = process.env.FORGE_FILE_PATH || '';
-
-var bucketsApi = new ForgeSDK.BucketsApi(), // Buckets Client
-	objectsApi = new ForgeSDK.ObjectsApi(), // Objects Client
+var bucketsApi     = new ForgeSDK.BucketsApi(), // Buckets Client
+	objectsApi     = new ForgeSDK.ObjectsApi(), // Objects Client
 	derivativesApi = new ForgeSDK.DerivativesApi(); // Derivatives Client
 
 // Initialize the 2-legged OAuth2 client, set specific scopes and optionally set the `autoRefresh` parameter to true
@@ -40,7 +34,6 @@ oAuth2TwoLegged.authenticate().then(function(credentials){
 }, function(err){
     console.error(err);
 });
-
 
 /**
  * General error handling method
@@ -108,7 +101,6 @@ var createBucketIfNotExist = function (bucketKey) {
 	});
 };
 
-
 /**
  * Upload a File to previously created bucket.
  * Uses the oAuth2TwoLegged object that you retrieved previously.
@@ -118,7 +110,7 @@ var createBucketIfNotExist = function (bucketKey) {
  * @returns {Promise}
  */
 var uploadFile = function(bucketKey, filePath, fileName){
-	logs(chalk.bold.green("**** Uploading file. bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" filePath:")+ chalk.bgYellow.bold(filePath));
+	logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:")+ chalk.bgYellow.bold(filePath));
 	return new Promise(function(resolve, reject) {
 		fs.readFile(filePath, function (err, data) {
 			if (err){
@@ -174,8 +166,47 @@ var translateFile = function(encodedURN){
 	});
 };
 
+ /**
+  * Returns information about derivatives that correspond to a specific source file, including derviative URNs and statuses.  The URNs of the derivatives are used to download the generated derivatives when calling the [GET {urn}/manifest/{derivativeurn}](https://developer.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-derivativeurn-GET) endpoint.  The statuses are used to verify whether the translation of requested output files is complete.  Note that different output files might complete their translation processes at different times, and therefore may have different &#x60;status&#x60; values.  When translating a source file a second time, the previously created manifest is not deleted; it appends the information (only new translations) to the manifest. 
+  * @param {String} urn The Base64 (URL Safe) encoded design URN 
+  * @param {Object} opts Optional parameters
+  * @param {String} opts.acceptEncoding If specified with `gzip` or `*`, content will be compressed and returned in a GZIP format. 
+  * data is of type: {module:model/Manifest}
+  * @param {Object} oauth2client oauth2client for the call
+  * @param {Object} credentials credentials for the call
+  */
+
+
+var manifestFile = function (encodedURN) {
+	
+	logs(chalk.bold.green("**** Getting File Manifest Status"));
+	
+	return new Promise(function(resolve, reject) {
+		derivativesApi.getManifest(encodedURN, {}, oAuth2TwoLegged, oAuth2TwoLegged.getCredentials()).then(
+			function(res){
+				if (res.body.progress != "complete"){
+					logs(chalk.bold.yellow("The status of your file is ") + chalk.bgYellow.bold(res.body.status) + chalk.bold.yellow(" Please wait while we finish Translating your file"));
+				}
+				else{
+					logs(chalk.bold.blue("****", res.body.status));
+					logs(chalk.bold.blue("****", res.body.progress));
+					resolve(res);
+				}
+				
+			},function(err){
+				reject(err);
+			}
+		)	
+	});
+}
+
 /**
- * Create an access token and run the API calls.
+ * Create an access token and run the following API calls.
+ * Create Bucket
+ * Get Buckets
+ * Upload File to Bucket
+ * Translate File
+ * Check Manifest Status of Translation of File
  */
 oAuth2TwoLegged.authenticate().then(function(credentials){
 
@@ -194,10 +225,15 @@ oAuth2TwoLegged.authenticate().then(function(credentials){
 			});
 
 			uploadFile(BUCKET_KEY, FILE_PATH, FILE_NAME).then(function(uploadRes){
-				logs(chalk.bold.green("**** Upload file response:") + chalk.bold.blue( uploadRes.body));
 				const urnEncode = new Buffer(uploadRes.body.objectId).toString('base64');
+				
 				translateFile(urnEncode).then(function(translateRes){
-					logs(chalk.bold.green("****** Translating file:") + chalk.bold.blue(urnEncode));	
+					logs(chalk.bold.green("**** Translating file:") + chalk.bold.blue(urnEncode));
+					
+					manifestFile(urnEncode).then(function(){
+						logs(chalk.bold.green("**** Your File is ready for viewing"));								
+					}, defaultHandleError)	
+
 				}, defaultHandleError);
 
 			}, defaultHandleError);
