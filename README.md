@@ -28,11 +28,24 @@ Follow these instructions to get the app running locally:
 	> git clone <THIS-REPO>
 	> cd TO-REPO-PATH	
 	> npm install
-	> set FORGE_CLIENT_ID=<<YOUR CLIENT ID FROM DEVELOPER PORTAL>
-	> set FORGE_CLIENT_SECRET=<<YOUR CLIENT SECRET>
-   	> node uploader.js
-   	  
+	
 This will install all the neccesary dependencies the project has, which are specified in the package.json file, and also run you the steps speciefied before to get as a result the URN of your transalated file. 
+
+Now make a copy of the forge_auth.sh.example file provided in the repo
+
+	> cp forge_auth.sh.example forge_auth.sh
+
+If using windows
+
+	> copy forge_auth.sh.example forge_auth.sh
+
+Now you will need to go to the new created forge_auth.sh file and replace it with your own data in order to the use the sample. Once that is complete test the following so you make sure your data got correctly assigned to your ENV variables. 
+	
+	> source forge_auth.sh
+	> echo $FORGE_BUCKET_NAME // if you see your bucket name continue
+   	> npm start
+   
+   	  
 
 This URN can be used in the following project  
 [Viewer-nodejs-tutorial] (https://github.com/Autodesk-Forge/viewer-nodejs-tutorial)

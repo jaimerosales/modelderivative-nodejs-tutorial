@@ -4,7 +4,8 @@
   "description": "tutorial using forge api npm",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node uploader.js"
   },
   "repository": {
     "type": "git",
