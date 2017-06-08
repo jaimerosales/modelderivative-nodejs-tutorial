@@ -5,11 +5,15 @@
 export FORGE_CLIENT_ID='REPLACE_ME'
 export FORGE_CLIENT_SECRET='REPLACE_ME'
 
-// TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
-// regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
-// length). Note that you cannot change a bucket key.
+# TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
+# regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
+# length). Note that you cannot change a bucket key.
 export FORGE_BUCKET_NAME='REPLACE_ME'
-
 export FORGE_FILE_NAME=''
+
+# File path  move up in levels to get to your file path, will be the quickest way, lets assume I have a models folder in this repo, I would do a File 
+# path like this './models/YOURFILENAME.EXTENSIO'
 export FORGE_FILE_PATH=''
+
+# We do not need a port for this.
 # export PORT=3000
