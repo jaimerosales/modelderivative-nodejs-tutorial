@@ -48,7 +48,7 @@ Now you will need to go to the new created forge_auth.sh file and replace it wit
 If using Windows, unfortunately it does not have a built-in utility to support .sh files. To run such, you'll need to install a third-party tool such as [Cygwin](http://www.cygwin.com/).
 
 This URN can be used in the following project  
-[Viewer-nodejs-tutorial] (https://github.com/Autodesk-Forge/viewer-nodejs-tutorial)
+[Viewer-nodejs-tutorial](https://github.com/Autodesk-Forge/viewer-nodejs-tutorial)
 
 ## License
 
