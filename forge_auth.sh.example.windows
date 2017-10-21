@@ -1,0 +1,19 @@
+# Copy to forge_auth.sh, replace with your own data and execute
+# in your terminal like "source forge_auth.sh" before running the scripts.
+# Check with "echo $FORGE_BUCKET_NAME" that your variables got exported.
+# Make sure you don't publish your credentials!
+set FORGE_CLIENT_ID='REPLACE_ME'
+set FORGE_CLIENT_SECRET='REPLACE_ME'
+
+# TODO - Choose a bucket key - a unique name to assign to a bucket. It must be globally unique across all applications and
+# regions, otherwise the call will fail. Possible values: -_.a-z0-9 (between 3-128 characters in
+# length). Note that you cannot change a bucket key.
+set FORGE_BUCKET_NAME='REPLACE_ME'
+set FORGE_FILE_NAME=''
+
+# File path  move up in levels to get to your file path, will be the quickest way, lets assume I have a models folder in this repo, I would do a File 
+# path like this './models/YOURFILENAME.EXTENSIO'
+set FORGE_FILE_PATH=''
+
+# We do not need a port for this.
+# set PORT=3000
