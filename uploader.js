@@ -103,6 +103,37 @@ var createBucketIfNotExist = function (bucketKey) {
 	});
 };
 
+
+/**
+ * Checker for Size of File, depending on size will run resumable upload or upload as a whole.
+ * Uses the oAuth2TwoLegged object that you retrieved previously.
+ * @param bucketKey
+ * @param filePath
+ * @param fileName
+ */
+
+
+var uploadFileCheck = function(bucketKey, filePath, fileName) {
+     return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                if (data.length < 29835264){ // Less than 2MB files upload process
+                    logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:") + chalk.bgYellow.bold(filePath));
+                    resolve(uploadFile(bucketKey, filePath, fileName));
+                }
+                else{
+                    logs(chalk.bold.green("**** Uploading to bucket by chunks:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:") + chalk.bgYellow.bold(filePath));
+                    resolve(uploadFileChunk(bucketKey, filePath, fileName));
+                }
+            }
+        })
+    })
+}
+
+
 /**
  * Upload a File to previously created bucket.
  * Uses the oAuth2TwoLegged object that you retrieved previously.
@@ -112,7 +143,6 @@ var createBucketIfNotExist = function (bucketKey) {
  * @returns {Promise}
  */
 var uploadFile = function(bucketKey, filePath, fileName){
-	logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:")+ chalk.bgYellow.bold(filePath));
 	return new Promise(function(resolve, reject) {
 		fs.readFile(filePath, function (err, data) {
 			if (err){
@@ -140,8 +170,7 @@ var uploadFile = function(bucketKey, filePath, fileName){
  * @returns {Promise}
  */
 var uploadFileChunk = function(bucketKey, filePath, fileName) {
-    logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:") + chalk.bgYellow.bold(filePath));
-    return new Promise(function (resolve, reject) {
+     return new Promise(function (resolve, reject) {
         fs.readFile(filePath, function (err, data) {
             if (err) {
                 reject(err);
@@ -182,9 +211,8 @@ var uploadFileChunk = function(bucketKey, filePath, fileName) {
                     });
 
                     async.waterfall(uploadChuckArray, function (err, result) {
-                        //console.log("chunkIndex", chunkIdx, " Status Code ", JSON.stringify(err.statusCode))
-						if (err.statusCode == 200) {
-                        	resolve(err)
+                       	if (err.statusCode == 200) {
+							resolve(err)
 						}
                     })
 
@@ -251,7 +279,9 @@ var manifestFile = function (encodedURN) {
 			function(res){
 				if (res.body.progress != "complete"){
 					logs(chalk.bold.yellow("The status of your file is ") + chalk.bgYellow.bold(res.body.status) + chalk.bold.yellow(" Please wait while we finish Translating your file"));
-				}
+                    logs(chalk.bold.yellow("The percentage of your file is ") + chalk.bgYellow.bold(res.body.progress));
+
+                }
 				else{
 					logs(chalk.bold.blue("****", res.body.status));
 					logs(chalk.bold.blue("****", res.body.progress));
@@ -264,6 +294,7 @@ var manifestFile = function (encodedURN) {
 		)	
 	});
 }
+
 
 /**
  * Create an access token and run the following API calls.
@@ -289,7 +320,7 @@ oAuth2TwoLegged.authenticate().then(function(credentials){
 				console.error(err);
 			});
 
-            uploadFileChunk(BUCKET_KEY, FILE_PATH, FILE_NAME).then(function(uploadRes){
+            uploadFileCheck(BUCKET_KEY, FILE_PATH, FILE_NAME).then(function(uploadRes){
 				const urnEncode = new Buffer(uploadRes.body.objectId).toString('base64');
 				
 				translateFile(urnEncode).then(function(translateRes){
