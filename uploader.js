@@ -1,4 +1,6 @@
 var fs = require('fs');
+var guid = require('guid'); // random guid generator
+var async = require ('async'); // async package for use of waterfall in upload resumable
 var chalk = require('chalk'); // coloring terminal console logs https://github.com/chalk/chalk
 var logs = console.log;
 
@@ -60,7 +62,7 @@ var getBucketDetails = function (bucketKey) {
  */
 var createBucket = function (bucketKey) {
 	logs(chalk.bold.green("**** Creating Bucket : ") + chalk.blue.bold(bucketKey));
-	var createBucketJson = {'bucketKey': bucketKey, 'policyKey': 'temporary'};
+	var createBucketJson = {'bucketKey': bucketKey, 'policyKey': 'persistent'};
 	return bucketsApi.createBucket(createBucketJson, {}, oAuth2TwoLegged, oAuth2TwoLegged.getCredentials());
 };
 
@@ -129,6 +131,69 @@ var uploadFile = function(bucketKey, filePath, fileName){
 	});
 };
 
+/**
+ * Upload a File to previously created bucket.
+ * Uses the oAuth2TwoLegged object that you retrieved previously.
+ * @param bucketKey
+ * @param filePath
+ * @param fileName
+ * @returns {Promise}
+ */
+var uploadFileChunk = function(bucketKey, filePath, fileName) {
+    logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:") + chalk.bgYellow.bold(filePath));
+    return new Promise(function (resolve, reject) {
+        fs.readFile(filePath, function (err, data) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                var chunkSize = 5 * 1024 * 1024
+                var nbChunks = Math.ceil(data.length / chunkSize)
+                var chunksMap = Array.from({
+                    length: nbChunks
+                }, (e, i) => i)
+
+                // generates uniques session ID
+                var sessionId = guid.create();
+                var uploadChuckArray = [];
+
+                var range;
+                var readStream;
+
+                // prepare the upload tasks
+                chunksMap.map((chunkIdx) => {
+                    var start = chunkIdx * chunkSize
+                    var end = Math.min(data.length, (chunkIdx + 1) * chunkSize) - 1;
+
+                    if (chunkIdx == (nbChunks - 1)) {
+                        chunkSize = data.length - start; // Change the final content-length chunk since it will have a smaller number of bytes on last chunk
+                    }
+
+                    range = `bytes ${start}-${end}/${data.length}`
+                    readStream = fs.createReadStream(filePath, {start, end})
+
+                    chunksMap.forEach(function (chunk) {
+                        uploadChuckArray.push(function (callback) {
+                            logs(chalk.bold.green("**** Uploading Chunks ***** with Range ", range));
+                        	objectsApi.uploadChunk(bucketKey, fileName, chunkSize, range, sessionId.value, readStream, {}, oAuth2TwoLegged, oAuth2TwoLegged.getCredentials())
+								.then(callback)
+								.catch(callback)
+                        })
+                    });
+
+                    async.waterfall(uploadChuckArray, function (err, result) {
+                        //console.log("chunkIndex", chunkIdx, " Status Code ", JSON.stringify(err.statusCode))
+						if (err.statusCode == 200) {
+                        	resolve(err)
+						}
+                    })
+
+
+                });
+            }
+        });
+	})
+}
 /**
  * Translate a source file from one format to another.  Derivatives are stored in a manifest that is updated each time this endpoint is used on a source file.  Note that this endpoint is asynchronous and initiates a process that runs in the background, rather than keeping an open HTTP connection until completion. Use the [GET {urn}/manifest](https://developer.autodesk.com/en/docs/model-derivative/v2/reference/http/urn-manifest-GET) endpoint to poll for the job’s completion. 
  * @param {module:model/JobPayload} job 
@@ -224,7 +289,7 @@ oAuth2TwoLegged.authenticate().then(function(credentials){
 				console.error(err);
 			});
 
-			uploadFile(BUCKET_KEY, FILE_PATH, FILE_NAME).then(function(uploadRes){
+            uploadFileChunk(BUCKET_KEY, FILE_PATH, FILE_NAME).then(function(uploadRes){
 				const urnEncode = new Buffer(uploadRes.body.objectId).toString('base64');
 				
 				translateFile(urnEncode).then(function(translateRes){
