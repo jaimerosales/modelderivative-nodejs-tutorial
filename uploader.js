@@ -120,7 +120,7 @@ var uploadFileCheck = function(bucketKey, filePath, fileName) {
                 reject(err);
             }
             else {
-                if (data.length < 29835264){ // Less than 2MB files upload process
+                if (data.length < 5242879){ // Less than 5MB files upload process
                     logs(chalk.bold.green("**** Uploading to bucket:") + chalk.blue.bold(bucketKey) + chalk.yellow.bold(" File:") + chalk.bgYellow.bold(filePath));
                     resolve(uploadFile(bucketKey, filePath, fileName));
                 }
